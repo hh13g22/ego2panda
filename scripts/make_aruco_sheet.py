@@ -1,6 +1,9 @@
-"""Render the A4 ArUco sheet to a PDF at true physical scale. Print at 100% ("actual size").
+"""Stage 1: make the printable A4 sheet with four ArUco markers.
 
-Usage: python scripts/make_aruco_sheet.py --out results/aruco_sheet_a4.pdf
+The PDF is drawn at true size and includes a 10 cm scale bar to check the print.
+
+Usage:
+    python scripts/make_aruco_sheet.py --out results/aruco_sheet_a4.pdf
 """
 import argparse
 import sys
@@ -20,6 +23,7 @@ SCALE_BAR_CM = 10.0
 
 
 def main() -> None:
+    """Draw the four markers and the scale bar at true size and save the PDF."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()

@@ -1,7 +1,10 @@
-"""Build-order step 2: a hard-coded scripted pick-and-place must succeed before any learning.
+"""Check the robot control before using any human data.
 
-Validates frames (world-frame object positions), action scale and gripper sign.
-Usage: python scripts/sim_check.py --episodes 20 --out-dir results/sim_check
+Runs a hand-written pick-and-place (hover, descend, close, lift, carry, lower, open) on LIBERO start
+states. Success confirms the coordinate frames, the action scale and the gripper sign are right.
+
+Usage:
+    python scripts/sim_check.py --episodes 50 --out-dir results/sim_check
 """
 import argparse
 import json
@@ -22,7 +25,7 @@ RELEASE_M = 0.08     # release height above the bowl centre
 
 
 def scripted_waypoints(obj: np.ndarray, target: np.ndarray) -> list[tuple[np.ndarray, float, int]]:
-    """(target position, gripper command, number of control steps) for one pick-and-place."""
+    """Return the hand-written pick-and-place as (target position, gripper command, number of steps)."""
     up = np.array([0.0, 0.0, 1.0])
     return [
         (obj + HOVER_M * up, GRIPPER_OPEN, 40),
@@ -36,6 +39,7 @@ def scripted_waypoints(obj: np.ndarray, target: np.ndarray) -> list[tuple[np.nda
 
 
 def run_episode(env, init_state, record: bool) -> tuple[bool, list[np.ndarray]]:
+    """Run the scripted pick-and-place on one start state; return success and (optionally) the camera frames."""
     env.reset()
     obs = settle(env, env.set_init_state(init_state))
     frames, success = [], False
@@ -49,11 +53,13 @@ def run_episode(env, init_state, record: bool) -> tuple[bool, list[np.ndarray]]:
 
 
 def save_gif(frames: list[np.ndarray], path: Path) -> None:
+    """Save frames as an animated GIF."""
     images = [Image.fromarray(f) for f in frames[::2]]
     images[0].save(path, save_all=True, append_images=images[1:], duration=100, loop=0)
 
 
 def main() -> None:
+    """Run the scripted episodes, save a GIF of the first one, and save the success rate."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--episodes", type=int, default=20)
     parser.add_argument("--out-dir", type=Path, required=True)

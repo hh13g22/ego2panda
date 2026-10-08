@@ -1,7 +1,10 @@
-"""Accuracy of the aperture-threshold gripper state against hand labels from label_gripper.py.
+"""Check how well the open/closed threshold matches hand labels.
 
-Usage: python scripts/eval_gripper.py --labels results/gripper_labels.csv --processed-dir data/processed \
-           --out results/gripper_accuracy.json
+Compares the threshold's prediction with each label from label_gripper.py and saves accuracy and error counts.
+
+Usage:
+    python scripts/eval_gripper.py --labels results/gripper_labels.csv --processed-dir data/processed \
+        --out results/gripper_accuracy.json
 """
 import argparse
 import csv
@@ -12,6 +15,7 @@ import numpy as np
 
 
 def main() -> None:
+    """Compare the threshold with the hand labels and save the accuracy."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--labels", type=Path, required=True)
     parser.add_argument("--processed-dir", type=Path, required=True)

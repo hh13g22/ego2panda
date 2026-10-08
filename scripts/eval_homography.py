@@ -1,8 +1,10 @@
-"""Homography accuracy vs number of markers used, measured on held-out marker corners.
+"""Measure how accurate the homography is when fitted from 1, 2 or 3 markers.
 
-On every frame where all 4 markers are detected, fit the homography from each subset of k markers and map the
-corners of the left-out markers into sheet cm; the error is the distance to their known printed positions.
-Usage: python scripts/eval_homography.py --clips data/raw/*.mp4 --out results/homography_accuracy.json
+On every frame where all 4 markers are visible, the homography is fitted from a subset of markers and used
+to map the corners of the markers left out. The error is the distance to where those corners really are.
+
+Usage:
+    python scripts/eval_homography.py --clips data/raw/*.mp4 --out results/homography_accuracy.json
 """
 import argparse
 import itertools
@@ -19,7 +21,7 @@ from src.markers import detect_markers, make_detector, to_sheet
 
 
 def held_out_errors(markers: dict[int, np.ndarray], k: int) -> list[float]:
-    """Corner errors (cm) of the markers left out when fitting from every k-marker subset."""
+    """Fit the homography from every set of k markers and return the corner errors (cm) of the markers left out."""
     errors = []
     for used in itertools.combinations(sorted(markers), k):
         H, _ = cv2.findHomography(np.concatenate([markers[i] for i in used]),
@@ -30,6 +32,7 @@ def held_out_errors(markers: dict[int, np.ndarray], k: int) -> list[float]:
 
 
 def main() -> None:
+    """Collect errors over all frames with 4 markers and save median, 90th percentile and max."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--clips", type=Path, nargs="+", required=True)
     parser.add_argument("--out", type=Path, required=True)

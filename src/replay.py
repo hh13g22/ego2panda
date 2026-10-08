@@ -1,4 +1,8 @@
-"""Replay a retargeted human trajectory on the Panda and record it as a candidate demonstration."""
+"""Drive the simulated Panda along one retargeted human clip and record what happened.
+
+The recording (camera images, robot state and action at every step) becomes a training demonstration
+if LIBERO reports that the task succeeded.
+"""
 import numpy as np
 
 from src.control import position_action
@@ -10,7 +14,10 @@ STEPS_AFTER_SUCCESS = 10  # keep a few frames of the object resting in the bowl,
 
 
 def replay(env, init_state, traj: np.ndarray) -> dict:
-    """Track the retargeted trajectory with OSC_POSE deltas. Returns success flag, recorded frames and map scale."""
+    """Replay one human trajectory on one start state.
+
+    Returns whether the task succeeded, the recorded frames (images, state, action) and the human-to-robot scale.
+    """
     env.reset()
     obs = settle(env, env.set_init_state(init_state))
     grasp, release = grasp_interval(traj[:, 4] > 0.5)

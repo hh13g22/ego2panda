@@ -1,22 +1,24 @@
-"""ArUco detection and per-frame image -> sheet-plane homography."""
+"""Detect the sheet's ArUco markers in a frame and compute the homography that maps image pixels to
+sheet centimetres. The phone moves, so this is recomputed for every frame."""
 import cv2
 import numpy as np
 
 from src.aruco_sheet import DICTIONARY, MARKER_TOP_LEFT_CM, marker_corners_cm
 
-# 3 markers (12 corners) give 0.13 cm median error at held-out marker corners vs 2.5 cm for a single marker
-# (measured on the test clips' all-4-visible frames), so a frame needs at least 3.
+# With 3 markers the homography error is 0.085 cm median vs 0.37 cm with 1 marker
+# (results/homography_accuracy.json), so a frame needs at least 3 markers.
 MIN_MARKERS = 3
 
 
 def make_detector() -> cv2.aruco.ArucoDetector:
+    """Create an ArUco detector for the sheet's marker dictionary."""
     params = cv2.aruco.DetectorParameters()
     params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX  # sub-pixel corners for a tighter homography
     return cv2.aruco.ArucoDetector(cv2.aruco.getPredefinedDictionary(DICTIONARY), params)
 
 
 def detect_markers(detector: cv2.aruco.ArucoDetector, gray: np.ndarray) -> dict[int, np.ndarray]:
-    """Sheet markers visible in the frame: {marker_id: 4x2 pixel corners (TL, TR, BR, BL)}."""
+    """Return the sheet markers found in a grayscale frame as {marker id: 4 corner pixels}."""
     corners, ids, _ = detector.detectMarkers(gray)
     if ids is None:
         return {}
@@ -24,7 +26,7 @@ def detect_markers(detector: cv2.aruco.ArucoDetector, gray: np.ndarray) -> dict[
 
 
 def sheet_homography(markers: dict[int, np.ndarray]) -> np.ndarray | None:
-    """3x3 homography mapping image pixels -> sheet cm, or None if fewer than MIN_MARKERS are visible."""
+    """Return the 3x3 matrix that maps image pixels to sheet cm, or None if fewer than 3 markers are seen."""
     if len(markers) < MIN_MARKERS:
         return None
     ids = sorted(markers)
@@ -35,5 +37,5 @@ def sheet_homography(markers: dict[int, np.ndarray]) -> np.ndarray | None:
 
 
 def to_sheet(H: np.ndarray, px: np.ndarray) -> np.ndarray:
-    """Map Nx2 pixel points to Nx2 sheet cm."""
+    """Map pixel points to sheet cm with homography H."""
     return cv2.perspectiveTransform(px.reshape(-1, 1, 2).astype(np.float64), H).reshape(-1, 2)

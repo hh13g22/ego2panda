@@ -1,6 +1,7 @@
-"""Build-order step 1: confirm a LIBERO task renders off-screen.
+"""Check that a LIBERO task renders off-screen and save the two camera images.
 
-Usage: python scripts/render_check.py --suite libero_object --task-id 0 --out results/render_check.png
+Usage:
+    python scripts/render_check.py --suite libero_object --task-id 0 --out results/render_check.png
 """
 import argparse
 import sys
@@ -17,6 +18,7 @@ SETTLE_STEPS = 10  # let objects settle after reset
 
 
 def main() -> None:
+    """Load the task, render both cameras, fail if the images are blank, and save them."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--suite", default="libero_object")
     parser.add_argument("--task-id", type=int, default=0)

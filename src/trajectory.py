@@ -1,4 +1,5 @@
-"""Turn per-frame hand tracks into smoothed trajectories with a grasp/release interval."""
+"""Clean up per-frame hand tracks: fill short gaps, smooth, pick the open/closed threshold, and find
+the grasp and release frames."""
 import numpy as np
 from scipy.signal import savgol_filter
 
@@ -7,7 +8,7 @@ SAVGOL_ORDER = 2
 
 
 def fill_gaps(x: np.ndarray) -> np.ndarray:
-    """Linearly interpolate NaN rows of an (N,) or (N, D) array; edges hold the nearest valid value."""
+    """Fill missing (NaN) values by straight-line interpolation between the nearest valid frames."""
     x = x.reshape(len(x), -1).copy()
     idx = np.arange(len(x))
     for d in range(x.shape[1]):
@@ -19,12 +20,12 @@ def fill_gaps(x: np.ndarray) -> np.ndarray:
 
 
 def smooth(x: np.ndarray) -> np.ndarray:
-    """Savitzky-Golay smoothing along time."""
+    """Smooth a signal over time with a Savitzky-Golay filter (keeps sharp changes sharp)."""
     return savgol_filter(x, SAVGOL_WINDOW, SAVGOL_ORDER, axis=0)
 
 
 def otsu_threshold(values: np.ndarray, bins: int = 256) -> float:
-    """Threshold maximising between-class variance of a 1-D sample (Otsu's method)."""
+    """Return the value that best splits the data into two groups (Otsu's method)."""
     hist, edges = np.histogram(values, bins=bins)
     centres = (edges[:-1] + edges[1:]) / 2
     w0 = np.cumsum(hist)
@@ -35,7 +36,7 @@ def otsu_threshold(values: np.ndarray, bins: int = 256) -> float:
 
 
 def grasp_interval(closed: np.ndarray) -> tuple[int, int]:
-    """(grasp frame, release frame): first and last frame of the longest run of closed frames."""
+    """Return the grasp and release frames: start and end of the longest stretch of closed frames."""
     if not closed.any():
         raise ValueError("Gripper never closes in this clip")
     padded = np.concatenate([[0], closed.astype(int), [0]])

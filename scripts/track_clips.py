@@ -1,9 +1,14 @@
-"""Run ArUco detection + MediaPipe hand tracking on phone clips.
+"""Stage 2: track the marker sheet and the hand in every phone video.
 
-Writes per clip to --processed-dir an annotated video and <clip>_track.npy, an (N, 5) per-frame array with
-columns TRACK_COLUMNS (NaN where no hand / fewer than 3 markers); plus one aperture-over-time plot and a
-detection-count JSON for all clips to --out-dir.
-Usage: python scripts/track_clips.py --clips data/raw/*.mp4 --processed-dir data/processed --out-dir results/tracking
+For each frame: detect the ArUco markers, fit the homography, find the hand with MediaPipe, map the
+pinch point (midway between thumb and index tips) onto the sheet in cm, and measure the grip aperture.
+
+Outputs per clip (in --processed-dir): <clip>_track.npy, one row per frame
+[time s, pinch x cm, pinch y cm, aperture, markers seen], and <clip>_annotated.mp4.
+Outputs for all clips (in --out-dir): aperture.png and detection_counts.json.
+
+Usage:
+    python scripts/track_clips.py --clips data/raw/*.mp4 --processed-dir data/processed --out-dir results/tracking
 """
 import argparse
 import json
@@ -32,7 +37,7 @@ GREEN, RED, YELLOW, WHITE = (0, 200, 0), (0, 0, 255), (0, 220, 255), (255, 255, 
 
 
 def annotate(frame, markers, H, landmarks, index) -> None:
-    """Draw markers, projected sheet outline, hand skeleton and pinch point onto frame (in place)."""
+    """Draw the detected markers, sheet outline, hand skeleton, pinch point and readouts onto the frame."""
     for marker_id, corners in markers.items():
         cv2.polylines(frame, [corners.astype(np.int32)], True, GREEN, 1)
         cv2.putText(frame, str(marker_id), corners[0].astype(int), cv2.FONT_HERSHEY_SIMPLEX, 0.4, GREEN, 1)
@@ -56,7 +61,8 @@ def annotate(frame, markers, H, landmarks, index) -> None:
 
 
 def process_clip(clip: Path, out_video: Path) -> dict:
-    """Track one clip; returns per-frame marker counts, pinch point in sheet cm and apertures (NaN where missing)."""
+    """Track one clip frame by frame, write its annotated video, and return the per-frame measurements
+    (NaN where the hand or enough markers were not found)."""
     cap = cv2.VideoCapture(str(clip))
     if not cap.isOpened():
         raise FileNotFoundError(f"Cannot open video: {clip}")
@@ -93,7 +99,7 @@ def process_clip(clip: Path, out_video: Path) -> dict:
 
 
 def plot_apertures(tracks: dict[str, dict], out_path: Path, ncols: int = 4) -> None:
-    """Small multiples: one aperture-over-time panel per clip, shared axes."""
+    """Plot the grip aperture over time for every clip, one small panel per clip."""
     nrows = -(-len(tracks) // ncols)
     fig, axes = plt.subplots(nrows, ncols, figsize=(3.2 * ncols, 2.0 * nrows), sharex=True, sharey=True,
                              squeeze=False)
@@ -120,6 +126,7 @@ def plot_apertures(tracks: dict[str, dict], out_path: Path, ncols: int = 4) -> N
 
 
 def main() -> None:
+    """Track every clip, save its track file and video, then save the plot and detection counts."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--clips", type=Path, nargs="+", required=True)
     parser.add_argument("--processed-dir", type=Path, required=True)

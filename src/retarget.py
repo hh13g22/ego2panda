@@ -1,9 +1,9 @@
-"""Event-anchored retargeting of a human pinch trajectory to Panda end-effector targets.
+"""Convert a human pinch trajectory into gripper targets for the simulated Panda.
 
-x, y: a 2-D similarity (rotation + uniform scale + translation) that maps the human grasp point onto the sim
-object and the human release point onto the sim target; every other frame goes through the same map, so the
-shape of the human motion between (and before) the events is kept.
-z: monocular video gives no reliable height, so height follows the task phase (hover, descend, carry, lower).
+x, y: a rotation + uniform scale + shift that puts the human grasp point on the sim object and the human
+release point on the sim bowl. All other frames use the same mapping, so the shape of the human motion is kept.
+z: a phone video gives no reliable height, so height follows the task phase (hover, descend, lift, lower).
+Gripper: closed between the human grasp and release.
 """
 import numpy as np
 
@@ -20,13 +20,14 @@ POST_RELEASE_S = 0.5
 
 
 def sheet_to_complex(xy_cm: np.ndarray) -> np.ndarray:
-    """Sheet (x right, y down the page) -> complex x + iy in a right-handed, z-up table frame (flip y)."""
+    """Write sheet points as complex numbers x + iy, flipping y so the frame matches the robot's table."""
     return xy_cm[:, 0] - 1j * xy_cm[:, 1]
 
 
 def similarity_xy(human_xy_cm: np.ndarray, grasp: int, release: int,
                   obj_xy: np.ndarray, target_xy: np.ndarray) -> tuple[np.ndarray, float]:
-    """Map human xy (cm) to sim xy (m) so grasp -> obj_xy and release -> target_xy. Returns (xy, scale)."""
+    """Map the human x-y path (cm) into the sim (m) so the grasp lands on the object and the release on
+    the target. Returns the mapped path and the scale factor."""
     h = sheet_to_complex(human_xy_cm)
     o, t = complex(*obj_xy), complex(*target_xy)
     if abs(h[release] - h[grasp]) < 1.0:
@@ -37,12 +38,13 @@ def similarity_xy(human_xy_cm: np.ndarray, grasp: int, release: int,
 
 
 def ramp(n: int, start: float, end: float) -> np.ndarray:
+    """Return n evenly spaced values from start to end."""
     return np.linspace(start, end, n) if n > 0 else np.empty(0)
 
 
 def phase_z(n: int, grasp: int, release: int, ramp_frames: int,
             obj_z: float, target_z: float) -> np.ndarray:
-    """Per-frame height: hover, descend to the object, lift to carry height, lower toward the target."""
+    """Return a height for every frame: hover, descend to the object, lift to carry height, lower over the target."""
     hover, carry, drop = obj_z + HOVER_M, target_z + CARRY_M, target_z + RELEASE_M
     z = np.empty(n)
     d0 = max(grasp - ramp_frames, 0)
@@ -60,7 +62,10 @@ def phase_z(n: int, grasp: int, release: int, ramp_frames: int,
 
 def retarget(traj: np.ndarray, grasp: int, release: int, obj_pos: np.ndarray, target_pos: np.ndarray,
              ) -> tuple[np.ndarray, np.ndarray, float]:
-    """Human trajectory (N, 5: t, x_cm, y_cm, aperture, closed) -> sim-rate (targets (M, 3), gripper (M,), scale)."""
+    """Turn a human trajectory into one gripper target and gripper command per sim control step.
+
+    Also adds short pauses at grasp and release so the arm arrives before the gripper closes or opens.
+    """
     t = traj[:, 0]
     fps = 1.0 / np.median(np.diff(t))
     end = min(len(traj) - 1, release + int(POST_RELEASE_S * fps))
@@ -69,7 +74,7 @@ def retarget(traj: np.ndarray, grasp: int, release: int, obj_pos: np.ndarray, ta
     frames = np.column_stack([xy, z])
 
     def resample(a: int, b: int) -> np.ndarray:
-        """Frames a..b (inclusive) resampled to the sim control rate."""
+        """Resample frames a..b from the video frame rate to the sim control rate."""
         ts = np.arange(t[a], t[b], 1.0 / SIM_HZ)
         return np.column_stack([np.interp(ts, t[a:b + 1], frames[a:b + 1, d]) for d in range(3)])
 

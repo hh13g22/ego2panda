@@ -1,8 +1,11 @@
-"""Smooth per-frame hand tracks into trajectories and detect grasp / release.
+"""Stage 3: turn per-frame hand tracks into clean trajectories with grasp and release frames.
 
-Reads <clip>_track.npy (from track_clips.py); writes <clip>_traj.npy, an (N, 5) array with columns
-TRAJ_COLUMNS, plus the gripper threshold and a plot of all trajectories.
-Usage: python scripts/extract_trajectories.py --processed-dir data/processed --out-dir results/trajectories
+Reads <clip>_track.npy from track_clips.py. Writes <clip>_traj.npy, one row per frame:
+[time s, pinch x cm, pinch y cm, smoothed aperture, closed 0/1]. Also saves the open/closed threshold,
+the grasp/release frames of every clip, and a plot of all trajectories.
+
+Usage:
+    python scripts/extract_trajectories.py --processed-dir data/processed --out-dir results/trajectories
 """
 import argparse
 import json
@@ -24,6 +27,7 @@ GRASP_COLOR, RELEASE_COLOR = "#2a6fdb", "#e8743b"
 
 
 def plot_trajectories(trajs: dict[str, np.ndarray], out_path: Path) -> None:
+    """Plot every clip's pinch path on the sheet, one panel per layout, marking grasp and release."""
     fig, axes = plt.subplots(1, len(LAYOUTS), figsize=(13, 4.6), sharex=True, sharey=True)
     for ax, layout in zip(axes, LAYOUTS):
         for name, traj in trajs.items():
@@ -52,6 +56,7 @@ def plot_trajectories(trajs: dict[str, np.ndarray], out_path: Path) -> None:
 
 
 def main() -> None:
+    """Smooth every track, choose the threshold, find grasp/release, and save trajectories and plot."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--processed-dir", type=Path, required=True)
     parser.add_argument("--out-dir", type=Path, required=True)

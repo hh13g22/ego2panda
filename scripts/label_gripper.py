@@ -1,10 +1,12 @@
-"""Hand-label gripper state on randomly sampled frames (ground truth for the aperture threshold).
+"""Hand-label whether the hand is holding the cube on 200 random video frames.
 
-Shows raw frames one at a time. Keys: c = cube held between thumb and index (gripper should be CLOSED),
-o = not holding (OPEN, including a pre-shaped hand on the way to the cube), s = unclear/skip, q = save and quit.
-Progress is saved after every key, and re-running resumes where you left off.
-Usage: python scripts/label_gripper.py --raw-dir data/raw --processed-dir data/processed \
-           --out results/gripper_labels.csv --n 200
+These labels are the ground truth for checking the open/closed threshold (see eval_gripper.py).
+Keys: c = holding the cube, o = not holding (including a half-closed hand on the way to the cube),
+s = unclear, q = save and quit. Progress is saved after every key; running it again resumes.
+
+Usage:
+    python scripts/label_gripper.py --raw-dir data/raw --processed-dir data/processed \
+        --out results/gripper_labels.csv --n 200
 """
 import argparse
 import csv
@@ -19,7 +21,7 @@ SEED = 0
 
 
 def sample_frames(processed_dir: Path, n: int) -> list[tuple[str, int]]:
-    """n (clip, frame) pairs drawn uniformly from all frames of the tracked clips."""
+    """Pick n random (clip, frame) pairs from all frames of all clips (fixed seed, so always the same frames)."""
     pairs = [(p.name.removesuffix("_track.npy"), i)
              for p in sorted(processed_dir.glob("*_track.npy")) for i in range(len(np.load(p)))]
     if not pairs:
@@ -29,6 +31,7 @@ def sample_frames(processed_dir: Path, n: int) -> list[tuple[str, int]]:
 
 
 def read_frame(raw_dir: Path, clip: str, index: int) -> np.ndarray:
+    """Read one frame from a raw video."""
     cap = cv2.VideoCapture(str(raw_dir / f"{clip}.mp4"))
     cap.set(cv2.CAP_PROP_POS_FRAMES, index)
     ok, frame = cap.read()
@@ -39,6 +42,7 @@ def read_frame(raw_dir: Path, clip: str, index: int) -> np.ndarray:
 
 
 def main() -> None:
+    """Show each unlabelled frame and save the key pressed as its label."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--raw-dir", type=Path, required=True)
     parser.add_argument("--processed-dir", type=Path, required=True)

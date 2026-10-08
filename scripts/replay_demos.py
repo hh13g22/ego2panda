@@ -1,8 +1,12 @@
-"""Replay every retargeted clip on a range of LIBERO init states; keep successful replays as a LeRobot dataset.
+"""Stage 4: turn the retargeted human clips into a robot training dataset.
 
-Init states 25-49 are used for demonstrations; 0-24 are left for policy evaluation (lerobot-eval starts at 0).
-Usage: python scripts/replay_demos.py --processed-dir data/processed --dataset-root data/lerobot/ego2panda \
-           --out-dir results/replay --first-init 25 --last-init 49 --workers 4
+Every clip is replayed in LIBERO on start states 25-49 (start states 0-24 are kept for evaluating the
+policy). Only replays that succeed are saved, as a LeRobot dataset in the same format LeRobot's LIBERO
+evaluation feeds a policy. The replay success rate is saved to --out-dir.
+
+Usage:
+    python scripts/replay_demos.py --processed-dir data/processed --dataset-root data/lerobot/ego2panda \
+        --out-dir results/replay --first-init 25 --last-init 49 --workers 4
 """
 import argparse
 import json
@@ -22,12 +26,14 @@ _env = _init_states = None
 
 
 def _worker_init() -> None:
+    """Create one simulator per worker process."""
     global _env, _init_states
     from src.sim import SUITE, TASK_ID, make_env
     _env, _, _init_states = make_env(SUITE, TASK_ID, image_size=IMAGE_SIZE)
 
 
 def _run(job: tuple[str, str, int]) -> dict:
+    """Replay one clip on one start state; return the frames only if it succeeded."""
     from src.replay import replay
     clip, traj_path, init_id = job
     result = replay(_env, _init_states[init_id], np.load(traj_path))
@@ -36,6 +42,7 @@ def _run(job: tuple[str, str, int]) -> dict:
 
 
 def dataset_features() -> dict:
+    """Describe the dataset columns: two camera images, the 8-number state and the 7-number action."""
     image = {"dtype": "video", "shape": (IMAGE_SIZE, IMAGE_SIZE, 3), "names": ["height", "width", "channel"]}
     return {
         "observation.images.image": image,
@@ -48,6 +55,7 @@ def dataset_features() -> dict:
 
 
 def main() -> None:
+    """Replay every clip on every start state, save the successes as a dataset, and save the success rate."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--processed-dir", type=Path, required=True)
     parser.add_argument("--dataset-root", type=Path, required=True)

@@ -1,4 +1,9 @@
-"""LIBERO environment construction (off-screen, EGL)."""
+"""Create the LIBERO simulation used throughout the project and convert its observations.
+
+The task is LIBERO-Goal task 6, "put the cream cheese in the bowl", the closest LIBERO match to the
+recorded cube-into-bowl task. Rendering is off-screen (EGL). LIBERO reads its settings from a
+project-local .libero/ folder so the user's ~/.libero is never touched.
+"""
 import os
 from pathlib import Path
 
@@ -13,7 +18,7 @@ os.environ["LIBERO_CONFIG_PATH"] = str(LIBERO_CONFIG_DIR)
 
 
 def _write_libero_config() -> None:
-    """Point LIBERO at the bddl/init files shipped inside the installed package."""
+    """Write the project-local LIBERO config, pointing at the task files inside the installed package."""
     import importlib.util
 
     pkg_root = Path(importlib.util.find_spec("libero").submodule_search_locations[0]) / "libero"
@@ -44,15 +49,15 @@ IDLE_ACTION = np.array([0.0] * 6 + [-1.0])  # no motion, gripper open
 
 
 def settle(env, obs: dict) -> dict:
-    """Step with no motion so objects come to rest after an init state is loaded."""
+    """Run a few no-motion steps so objects come to rest after a start state is loaded."""
     for _ in range(SETTLE_STEPS):
         obs, _, _, _ = env.step(IDLE_ACTION)
     return obs
 
 
 def policy_observation(obs: dict) -> dict:
-    """Observation in the format LeRobot's LIBERO env + processor feeds a policy (HuggingFaceVLA/libero layout):
-    both images rotated 180 degrees, state = eef pos (3) + eef axis-angle (3) + gripper finger qpos (2)."""
+    """Return the observation in the format LeRobot gives a policy in LIBERO: both camera images rotated
+    180 degrees, and an 8-number state (gripper position, orientation as axis-angle, two finger positions)."""
     from robosuite.utils.transform_utils import quat2axisangle
 
     state = np.concatenate([obs["robot0_eef_pos"], quat2axisangle(obs["robot0_eef_quat"].copy()),
@@ -65,12 +70,12 @@ def policy_observation(obs: dict) -> dict:
 
 
 def agentview_frame(obs: dict) -> np.ndarray:
-    """Front camera image, flipped upright (MuJoCo renders with the origin at the bottom-left)."""
+    """Return the front camera image the right way up (MuJoCo renders it upside down)."""
     return obs["agentview_image"][::-1]
 
 
 def make_env(suite: str, task_id: int, image_size: int = 256):
-    """Build an OSC_POSE LIBERO env for one task. Returns (env, task, init_states)."""
+    """Create the LIBERO environment for one task. Returns the env, the task and its 50 start states."""
     task_suite = benchmark.get_benchmark_dict()[suite]()
     task = task_suite.get_task(task_id)
     bddl_file = Path(get_libero_path("bddl_files")) / task.problem_folder / task.bddl_file
