@@ -1,7 +1,9 @@
 """Run ArUco detection + MediaPipe hand tracking on phone clips.
 
-Writes per clip an annotated video, plus one aperture-over-time plot and a detection-count JSON for all clips.
-Usage: python scripts/track_clips.py --clips data/raw/1.mp4 data/raw/2.mp4 data/raw/3.mp4 --out-dir results/tracking
+Writes per clip an annotated video (to --video-dir), plus one aperture-over-time plot and a detection-count
+JSON for all clips (to --out-dir).
+Usage: python scripts/track_clips.py --clips data/raw/1.mp4 data/raw/2.mp4 data/raw/3.mp4 \
+           --video-dir data/processed --out-dir results/tracking
 """
 import argparse
 import json
@@ -107,13 +109,15 @@ def plot_apertures(tracks: dict[str, dict], out_path: Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--clips", type=Path, nargs="+", required=True)
+    parser.add_argument("--video-dir", type=Path, required=True)
     parser.add_argument("--out-dir", type=Path, required=True)
     args = parser.parse_args()
+    args.video_dir.mkdir(parents=True, exist_ok=True)
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
     tracks, counts = {}, {}
     for clip in args.clips:
-        track = process_clip(clip, args.out_dir / f"{clip.stem}_annotated.mp4")
+        track = process_clip(clip, args.video_dir / f"{clip.stem}_annotated.mp4")
         tracks[clip.stem] = track
         all_markers = track["n_markers"] == 4
         hand = ~np.isnan(track["aperture"])
