@@ -1,0 +1,7 @@
+data/raw/
+*.mp4
+*.mov
+*.pt
+*.safetensors
+__pycache__/
+.venv/
