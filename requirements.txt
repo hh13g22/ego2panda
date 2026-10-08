@@ -1,3 +1,7 @@
 # Python 3.12 (lerobot 0.6.1 requires >=3.12). Install: uv venv --python 3.12 .venv && uv pip install -r requirements.txt
+# PyTorch is pinned to the CUDA 12.8 build used by the openpi envs on this machine (known to work on the RTX 5070 Ti, sm_120).
+--extra-index-url https://download.pytorch.org/whl/cu128
+torch==2.10.0+cu128
+torchvision==0.25.0+cu128
 lerobot[libero,smolvla,training]==0.6.1
 mediapipe==1.1.0
