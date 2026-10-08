@@ -34,6 +34,27 @@ from libero.libero import benchmark, get_libero_path  # noqa: E402
 from libero.libero.envs import OffScreenRenderEnv  # noqa: E402
 
 
+import numpy as np  # noqa: E402
+
+# The one task this project uses: closest LIBERO match to the recorded "cube into bowl" task.
+SUITE, TASK_ID = "libero_goal", 6  # "put the cream cheese in the bowl"
+OBJECT, TARGET = "cream_cheese_1", "akita_black_bowl_1"
+SETTLE_STEPS = 10
+IDLE_ACTION = np.array([0.0] * 6 + [-1.0])  # no motion, gripper open
+
+
+def settle(env, obs: dict) -> dict:
+    """Step with no motion so objects come to rest after an init state is loaded."""
+    for _ in range(SETTLE_STEPS):
+        obs, _, _, _ = env.step(IDLE_ACTION)
+    return obs
+
+
+def agentview_frame(obs: dict) -> np.ndarray:
+    """Front camera image, flipped upright (MuJoCo renders with the origin at the bottom-left)."""
+    return obs["agentview_image"][::-1]
+
+
 def make_env(suite: str, task_id: int, image_size: int = 256):
     """Build an OSC_POSE LIBERO env for one task. Returns (env, task, init_states)."""
     task_suite = benchmark.get_benchmark_dict()[suite]()

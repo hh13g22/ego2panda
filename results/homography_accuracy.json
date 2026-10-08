@@ -1,0 +1,18 @@
+{
+  "frames_with_all_4_markers": 8221,
+  "1_markers": {
+    "median_cm": 0.365,
+    "p90_cm": 1.149,
+    "max_cm": 6523.996
+  },
+  "2_markers": {
+    "median_cm": 0.203,
+    "p90_cm": 0.404,
+    "max_cm": 4.718
+  },
+  "3_markers": {
+    "median_cm": 0.085,
+    "p90_cm": 0.14,
+    "max_cm": 0.997
+  }
+}

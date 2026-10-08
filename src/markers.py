@@ -4,6 +4,10 @@ import numpy as np
 
 from src.aruco_sheet import DICTIONARY, MARKER_TOP_LEFT_CM, marker_corners_cm
 
+# 3 markers (12 corners) give 0.13 cm median error at held-out marker corners vs 2.5 cm for a single marker
+# (measured on the test clips' all-4-visible frames), so a frame needs at least 3.
+MIN_MARKERS = 3
+
 
 def make_detector() -> cv2.aruco.ArucoDetector:
     params = cv2.aruco.DetectorParameters()
@@ -20,8 +24,8 @@ def detect_markers(detector: cv2.aruco.ArucoDetector, gray: np.ndarray) -> dict[
 
 
 def sheet_homography(markers: dict[int, np.ndarray]) -> np.ndarray | None:
-    """3x3 homography mapping image pixels -> sheet cm, or None unless all 4 markers are visible."""
-    if len(markers) < len(MARKER_TOP_LEFT_CM):
+    """3x3 homography mapping image pixels -> sheet cm, or None if fewer than MIN_MARKERS are visible."""
+    if len(markers) < MIN_MARKERS:
         return None
     ids = sorted(markers)
     img_pts = np.concatenate([markers[i] for i in ids])

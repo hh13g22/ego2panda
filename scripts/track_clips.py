@@ -1,9 +1,9 @@
 """Run ArUco detection + MediaPipe hand tracking on phone clips.
 
-Writes per clip an annotated video (to --video-dir), plus one aperture-over-time plot and a detection-count
-JSON for all clips (to --out-dir).
-Usage: python scripts/track_clips.py --clips data/raw/1.mp4 data/raw/2.mp4 data/raw/3.mp4 \
-           --video-dir data/processed --out-dir results/tracking
+Writes per clip to --processed-dir an annotated video and <clip>_track.npy, an (N, 5) per-frame array with
+columns TRACK_COLUMNS (NaN where no hand / fewer than 3 markers); plus one aperture-over-time plot and a
+detection-count JSON for all clips to --out-dir.
+Usage: python scripts/track_clips.py --clips data/raw/*.mp4 --processed-dir data/processed --out-dir results/tracking
 """
 import argparse
 import json
@@ -27,6 +27,7 @@ from src.markers import detect_markers, make_detector, sheet_homography, to_shee
 MODEL_PATH = Path(__file__).resolve().parents[1] / "models" / "hand_landmarker.task"
 HAND_EDGES = [(c.start, c.end) for c in HandLandmarksConnections.HAND_CONNECTIONS]
 SHEET_OUTLINE_CM = np.array([[0, 0], [SHEET_W_CM, 0], [SHEET_W_CM, SHEET_H_CM], [0, SHEET_H_CM]], dtype=np.float64)
+TRACK_COLUMNS = ("t_s", "pinch_x_cm", "pinch_y_cm", "aperture", "n_markers")
 GREEN, RED, YELLOW, WHITE = (0, 200, 0), (0, 0, 255), (0, 220, 255), (255, 255, 255)  # BGR
 
 
@@ -55,13 +56,13 @@ def annotate(frame, markers, H, landmarks, index) -> None:
 
 
 def process_clip(clip: Path, out_video: Path) -> dict:
-    """Track one clip; returns per-frame marker counts and apertures (NaN where no hand)."""
+    """Track one clip; returns per-frame marker counts, pinch point in sheet cm and apertures (NaN where missing)."""
     cap = cv2.VideoCapture(str(clip))
     if not cap.isOpened():
         raise FileNotFoundError(f"Cannot open video: {clip}")
     fps = cap.get(cv2.CAP_PROP_FPS)
     detector, tracker = make_detector(), HandTracker(MODEL_PATH)
-    n_markers, apertures = [], []
+    n_markers, apertures, pinch_cm = [], [], []
 
     with av.open(str(out_video), "w") as container:
         stream = container.add_stream("libx264", rate=round(fps))
@@ -77,6 +78,8 @@ def process_clip(clip: Path, out_video: Path) -> dict:
             landmarks = tracker.track(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), int(index * 1000 / fps))
             n_markers.append(len(markers))
             apertures.append(np.nan if landmarks is None else grip_aperture(landmarks))
+            pinch_cm.append(to_sheet(H, pinch_point(landmarks))[0] if H is not None and landmarks is not None
+                            else np.full(2, np.nan))
             annotate(frame, markers, H, landmarks, index)
             for packet in stream.encode(av.VideoFrame.from_ndarray(frame, format="bgr24")):
                 container.mux(packet)
@@ -85,7 +88,8 @@ def process_clip(clip: Path, out_video: Path) -> dict:
             container.mux(packet)
     cap.release()
     tracker.close()
-    return {"fps": fps, "n_markers": np.array(n_markers), "aperture": np.array(apertures)}
+    return {"fps": fps, "n_markers": np.array(n_markers), "aperture": np.array(apertures),
+            "pinch_cm": np.array(pinch_cm)}
 
 
 def plot_apertures(tracks: dict[str, dict], out_path: Path, ncols: int = 4) -> None:
@@ -118,16 +122,19 @@ def plot_apertures(tracks: dict[str, dict], out_path: Path, ncols: int = 4) -> N
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--clips", type=Path, nargs="+", required=True)
-    parser.add_argument("--video-dir", type=Path, required=True)
+    parser.add_argument("--processed-dir", type=Path, required=True)
     parser.add_argument("--out-dir", type=Path, required=True)
     args = parser.parse_args()
-    args.video_dir.mkdir(parents=True, exist_ok=True)
+    args.processed_dir.mkdir(parents=True, exist_ok=True)
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
     tracks, counts = {}, {}
     for clip in args.clips:
-        track = process_clip(clip, args.video_dir / f"{clip.stem}_annotated.mp4")
+        track = process_clip(clip, args.processed_dir / f"{clip.stem}_annotated.mp4")
         tracks[clip.stem] = track
+        t = np.arange(len(track["aperture"])) / track["fps"]
+        np.save(args.processed_dir / f"{clip.stem}_track.npy",
+                np.column_stack([t, track["pinch_cm"], track["aperture"], track["n_markers"]]))
         all_markers = track["n_markers"] == 4
         hand = ~np.isnan(track["aperture"])
         counts[clip.stem] = {
