@@ -88,21 +88,30 @@ def process_clip(clip: Path, out_video: Path) -> dict:
     return {"fps": fps, "n_markers": np.array(n_markers), "aperture": np.array(apertures)}
 
 
-def plot_apertures(tracks: dict[str, dict], out_path: Path) -> None:
-    fig, axes = plt.subplots(len(tracks), 1, figsize=(9, 2.4 * len(tracks)), sharex=True, squeeze=False)
-    for ax, (name, track) in zip(axes[:, 0], tracks.items()):
+def plot_apertures(tracks: dict[str, dict], out_path: Path, ncols: int = 4) -> None:
+    """Small multiples: one aperture-over-time panel per clip, shared axes."""
+    nrows = -(-len(tracks) // ncols)
+    fig, axes = plt.subplots(nrows, ncols, figsize=(3.2 * ncols, 2.0 * nrows), sharex=True, sharey=True,
+                             squeeze=False)
+    for ax, (name, track) in zip(axes.flat, tracks.items()):
         t = np.arange(len(track["aperture"])) / track["fps"]
         missing = track["n_markers"] < 4
         ax.fill_between(t, 0, 1, where=missing, transform=ax.get_xaxis_transform(),
                         color="0.88", step="mid", linewidth=0)
-        ax.plot(t, track["aperture"], color="#2a6fdb", linewidth=1.5)
-        ax.set_title(f"clip {name}", loc="left", fontsize=10)
-        ax.set_ylabel("aperture")
+        ax.plot(t, track["aperture"], color="#2a6fdb", linewidth=1.2)
+        ax.set_title(name, loc="left", fontsize=9)
         ax.spines[["top", "right"]].set_visible(False)
         ax.grid(axis="y", color="0.92")
-    axes[-1, 0].set_xlabel("time (s)")
+    for ax in axes.flat[len(tracks):]:
+        ax.set_visible(False)
+    for ax in axes[:, 0]:
+        ax.set_ylabel("aperture")
+    for col in range(ncols):
+        bottom = [ax for ax in axes[:, col] if ax.get_visible()][-1]  # lowest visible panel in this column
+        bottom.tick_params(labelbottom=True)
+        bottom.set_xlabel("time (s)")
     fig.suptitle("Thumb–index distance / palm length  (grey = fewer than 4 markers; gaps = no hand)", fontsize=10)
-    fig.tight_layout()
+    fig.tight_layout(rect=(0, 0, 1, 0.98))
     fig.savefig(out_path, dpi=120)
 
 

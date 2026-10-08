@@ -1,41 +1,379 @@
 {
-  "1": {
-    "frames": 342,
-    "all_4_markers": 342,
-    "hand": 342,
-    "all_4_markers_and_hand": 342,
+  "a1": {
+    "frames": 466,
+    "all_4_markers": 458,
+    "hand": 466,
+    "all_4_markers_and_hand": 458,
     "marker_count_histogram": {
       "0": 0,
       "1": 0,
       "2": 0,
-      "3": 0,
-      "4": 342
+      "3": 8,
+      "4": 458
     }
   },
-  "2": {
-    "frames": 333,
-    "all_4_markers": 333,
-    "hand": 333,
-    "all_4_markers_and_hand": 333,
+  "a2": {
+    "frames": 366,
+    "all_4_markers": 366,
+    "hand": 366,
+    "all_4_markers_and_hand": 366,
     "marker_count_histogram": {
       "0": 0,
       "1": 0,
       "2": 0,
       "3": 0,
-      "4": 333
+      "4": 366
     }
   },
-  "3": {
-    "frames": 375,
-    "all_4_markers": 375,
-    "hand": 375,
-    "all_4_markers_and_hand": 375,
+  "a3": {
+    "frames": 248,
+    "all_4_markers": 248,
+    "hand": 248,
+    "all_4_markers_and_hand": 248,
     "marker_count_histogram": {
       "0": 0,
       "1": 0,
       "2": 0,
       "3": 0,
-      "4": 375
+      "4": 248
+    }
+  },
+  "a4": {
+    "frames": 248,
+    "all_4_markers": 248,
+    "hand": 248,
+    "all_4_markers_and_hand": 248,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 248
+    }
+  },
+  "a5": {
+    "frames": 229,
+    "all_4_markers": 229,
+    "hand": 229,
+    "all_4_markers_and_hand": 229,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 229
+    }
+  },
+  "a6": {
+    "frames": 310,
+    "all_4_markers": 261,
+    "hand": 310,
+    "all_4_markers_and_hand": 261,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 49,
+      "4": 261
+    }
+  },
+  "a7": {
+    "frames": 239,
+    "all_4_markers": 239,
+    "hand": 239,
+    "all_4_markers_and_hand": 239,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 239
+    }
+  },
+  "a8": {
+    "frames": 341,
+    "all_4_markers": 341,
+    "hand": 341,
+    "all_4_markers_and_hand": 341,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 341
+    }
+  },
+  "a9": {
+    "frames": 212,
+    "all_4_markers": 212,
+    "hand": 212,
+    "all_4_markers_and_hand": 212,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 212
+    }
+  },
+  "a10": {
+    "frames": 297,
+    "all_4_markers": 297,
+    "hand": 297,
+    "all_4_markers_and_hand": 297,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 297
+    }
+  },
+  "b1": {
+    "frames": 188,
+    "all_4_markers": 188,
+    "hand": 188,
+    "all_4_markers_and_hand": 188,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 188
+    }
+  },
+  "b2": {
+    "frames": 237,
+    "all_4_markers": 237,
+    "hand": 237,
+    "all_4_markers_and_hand": 237,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 237
+    }
+  },
+  "b3": {
+    "frames": 259,
+    "all_4_markers": 259,
+    "hand": 259,
+    "all_4_markers_and_hand": 259,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 259
+    }
+  },
+  "b4": {
+    "frames": 325,
+    "all_4_markers": 325,
+    "hand": 325,
+    "all_4_markers_and_hand": 325,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 325
+    }
+  },
+  "b5": {
+    "frames": 527,
+    "all_4_markers": 480,
+    "hand": 527,
+    "all_4_markers_and_hand": 480,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 47,
+      "4": 480
+    }
+  },
+  "b6": {
+    "frames": 358,
+    "all_4_markers": 358,
+    "hand": 358,
+    "all_4_markers_and_hand": 358,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 358
+    }
+  },
+  "b7": {
+    "frames": 296,
+    "all_4_markers": 296,
+    "hand": 296,
+    "all_4_markers_and_hand": 296,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 296
+    }
+  },
+  "b8": {
+    "frames": 326,
+    "all_4_markers": 326,
+    "hand": 326,
+    "all_4_markers_and_hand": 326,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 326
+    }
+  },
+  "b10": {
+    "frames": 274,
+    "all_4_markers": 274,
+    "hand": 274,
+    "all_4_markers_and_hand": 274,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 274
+    }
+  },
+  "b11": {
+    "frames": 485,
+    "all_4_markers": 240,
+    "hand": 485,
+    "all_4_markers_and_hand": 240,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 69,
+      "3": 176,
+      "4": 240
+    }
+  },
+  "c1": {
+    "frames": 347,
+    "all_4_markers": 334,
+    "hand": 347,
+    "all_4_markers_and_hand": 334,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 13,
+      "4": 334
+    }
+  },
+  "c2": {
+    "frames": 289,
+    "all_4_markers": 289,
+    "hand": 289,
+    "all_4_markers_and_hand": 289,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 289
+    }
+  },
+  "c4": {
+    "frames": 260,
+    "all_4_markers": 260,
+    "hand": 260,
+    "all_4_markers_and_hand": 260,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 260
+    }
+  },
+  "c5": {
+    "frames": 293,
+    "all_4_markers": 293,
+    "hand": 293,
+    "all_4_markers_and_hand": 293,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 293
+    }
+  },
+  "c6": {
+    "frames": 421,
+    "all_4_markers": 421,
+    "hand": 421,
+    "all_4_markers_and_hand": 421,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 421
+    }
+  },
+  "c7": {
+    "frames": 192,
+    "all_4_markers": 192,
+    "hand": 192,
+    "all_4_markers_and_hand": 192,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 192
+    }
+  },
+  "c8": {
+    "frames": 195,
+    "all_4_markers": 195,
+    "hand": 195,
+    "all_4_markers_and_hand": 195,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 195
+    }
+  },
+  "c9": {
+    "frames": 187,
+    "all_4_markers": 187,
+    "hand": 187,
+    "all_4_markers_and_hand": 187,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 187
+    }
+  },
+  "c10": {
+    "frames": 168,
+    "all_4_markers": 168,
+    "hand": 168,
+    "all_4_markers_and_hand": 168,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 168
     }
   }
 }
