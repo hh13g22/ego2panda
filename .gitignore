@@ -8,3 +8,4 @@ __pycache__/
 .libero/
 models/
 data/lerobot/
+outputs/
