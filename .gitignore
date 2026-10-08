@@ -5,3 +5,4 @@ data/raw/
 *.safetensors
 __pycache__/
 .venv/
+.libero/
