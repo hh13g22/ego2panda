@@ -1,0 +1,41 @@
+{
+  "1": {
+    "frames": 689,
+    "all_4_markers": 147,
+    "hand": 655,
+    "all_4_markers_and_hand": 147,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 139,
+      "3": 403,
+      "4": 147
+    }
+  },
+  "2": {
+    "frames": 600,
+    "all_4_markers": 340,
+    "hand": 597,
+    "all_4_markers_and_hand": 337,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 12,
+      "2": 158,
+      "3": 90,
+      "4": 340
+    }
+  },
+  "3": {
+    "frames": 552,
+    "all_4_markers": 95,
+    "hand": 552,
+    "all_4_markers_and_hand": 95,
+    "marker_count_histogram": {
+      "0": 0,
+      "1": 18,
+      "2": 367,
+      "3": 72,
+      "4": 95
+    }
+  }
+}

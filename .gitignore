@@ -6,3 +6,4 @@ data/raw/
 __pycache__/
 .venv/
 .libero/
+models/
