@@ -50,6 +50,20 @@ def settle(env, obs: dict) -> dict:
     return obs
 
 
+def policy_observation(obs: dict) -> dict:
+    """Observation in the format LeRobot's LIBERO env + processor feeds a policy (HuggingFaceVLA/libero layout):
+    both images rotated 180 degrees, state = eef pos (3) + eef axis-angle (3) + gripper finger qpos (2)."""
+    from robosuite.utils.transform_utils import quat2axisangle
+
+    state = np.concatenate([obs["robot0_eef_pos"], quat2axisangle(obs["robot0_eef_quat"].copy()),
+                            obs["robot0_gripper_qpos"]]).astype(np.float32)
+    return {
+        "observation.images.image": np.ascontiguousarray(obs["agentview_image"][::-1, ::-1]),
+        "observation.images.image2": np.ascontiguousarray(obs["robot0_eye_in_hand_image"][::-1, ::-1]),
+        "observation.state": state,
+    }
+
+
 def agentview_frame(obs: dict) -> np.ndarray:
     """Front camera image, flipped upright (MuJoCo renders with the origin at the bottom-left)."""
     return obs["agentview_image"][::-1]

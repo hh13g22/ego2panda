@@ -1,0 +1,6 @@
+{
+  "labelled_frames": 200,
+  "accuracy": 0.91,
+  "true_closed_predicted_open": 0,
+  "true_open_predicted_closed": 18
+}
