@@ -1,0 +1,20 @@
+{
+  "val_clips": [
+    "a8",
+    "b5",
+    "c5"
+  ],
+  "episodes": 75,
+  "frames": 21143,
+  "mean_abs_error_cm_per_step": {
+    "x": 0.146,
+    "y": 0.191,
+    "z": 0.092
+  },
+  "human_mean_abs_command_cm_per_step": {
+    "x": 0.357,
+    "y": 0.397,
+    "z": 0.635
+  },
+  "gripper_agreement": 0.997
+}
