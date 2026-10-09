@@ -46,10 +46,18 @@ def predict_first_actions(policy, preprocessor, postprocessor, dataset) -> tuple
     return np.concatenate(predicted), np.concatenate(human), np.concatenate(episode)
 
 
+def release_step(gripper: np.ndarray) -> int:
+    """Return the step where the gripper command switches from closed (+1) to open (-1)."""
+    opens = np.flatnonzero((gripper[:-1] > 0) & (gripper[1:] <= 0))
+    if len(opens) == 0:
+        raise ValueError("The human gripper command never switches from closed to open")
+    return int(opens[0]) + 1
+
+
 def plot_paths(clips: dict[str, int], predicted, human, episode, out_path: Path) -> None:
     """Report figure: for one episode per held-out clip, the summed x-y and height commands and the gripper command,
     human (solid) vs policy (dashed), with one shared legend, row labels and a caption."""
-    styles = {"human": dict(color=HUMAN_COLOR, linestyle="-", linewidth=1.8, label="Human (retargeted replay)"),
+    styles = {"human": dict(color=HUMAN_COLOR, linestyle="-", linewidth=1.8, label="Human trajectory"),
               "policy": dict(color=POLICY_COLOR, linestyle="--", linewidth=1.6, label="Policy prediction")}
     fig, axes = plt.subplots(len(clips), 3, figsize=(12, 3.0 * len(clips) + 1.2), squeeze=False,
                              gridspec_kw={"width_ratios": [1, 1.25, 1.25], "wspace": 0.32, "hspace": 0.45})
@@ -64,6 +72,9 @@ def plot_paths(clips: dict[str, int], predicted, human, episode, out_path: Path)
             row[2].plot(t, a[:, 6], **styles[name])
         start = np.cumsum(actions["human"][:1, :3] * STEP_CM, axis=0)[0]
         row[0].plot(start[0], start[1], "o", color="0.2", markersize=5, label="Start")
+        human_path = np.cumsum(actions["human"][:, :3] * STEP_CM, axis=0)
+        goal = human_path[release_step(actions["human"][:, 6])]
+        row[0].plot(goal[0], goal[1], "*", color="0.2", markersize=11, label="Goal (human release over the bowl)")
         row[0].set_aspect("equal", adjustable="datalim")
         row[0].set_xlabel("x (cm)")
         row[0].set_ylabel(f"Clip {clip}\n\ny (cm)", fontsize=10)
@@ -80,7 +91,7 @@ def plot_paths(clips: dict[str, int], predicted, human, episode, out_path: Path)
             for ax, title in zip(row, ("(a) Summed x-y command", "(b) Summed height command", "(c) Gripper command")):
                 ax.set_title(title, loc="left", fontsize=11)
     handles, labels = axes[0, 0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center", ncol=3, frameon=False, fontsize=10, bbox_to_anchor=(0.5, 0.955))
+    fig.legend(handles, labels, loc="upper center", ncol=4, frameon=False, fontsize=10, bbox_to_anchor=(0.5, 0.955))
     fig.suptitle("Policy predictions on held-out human clips", fontsize=13, fontweight="bold", y=0.995)
     fig.text(0.5, 0.012,
              "At every 20 Hz step the policy sees the recorded camera images and robot state and predicts the next command;\n"
