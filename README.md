@@ -53,7 +53,7 @@ Training and testing use different layouts:
 
 SmolVLA predicts 50 actions at a time; "re-plan every 10 actions" means the robot carries out 10 of them before the model looks at the cameras again.
 
-The fair comparison is the first and last rows: the same starting model and training settings, trained on phone-video demonstrations or on LIBERO's 40 robot demonstrations. 23/25 against 25/25 is not a significant difference with 25 rollouts (Fisher's exact test, p ≈ 0.49). The gap is clear when re-planning after every action (8/25 against 19/25).
+These results suggest that a few dozen home-recorded phone clips can teach a robot this pick-and-place task, even though the dataset is small and the human hand paths are not optimal for the robot.  
 
 
 ## How it works
@@ -93,7 +93,7 @@ Each recorded clip provides a trajectory and this is used many times through tra
 </tr>
 </table>
 
-*The same recorded clip (a10) replayed by the Panda in three training layouts: the hand motion is refitted to where the cream cheese and bowl are in each. All three replays succeed and become training demonstrations.*
+*The same recorded clip (a10) replayed by the Panda in three training layouts: the hand motion is refitted to where the cream cheese and bowl are in each. LIBERO's layouts differ only slightly: across all 50, the cream cheese moves within about 4 × 4 cm and the bowl within about 3 × 3 cm <!-- results/layout_spread.json -->. All three replays succeed and become training demonstrations.*
 
 **What changes between replays.** The objects are in different places, so the recorded path cannot be copied as it is. For each start state the retargeting is recomputed: a rotation, scale and shift that put the grasp point on that start state's cream cheese and the release point on its bowl.
 
@@ -200,6 +200,7 @@ The vision encoder works at 4 bits, a quarter of its memory, with no measurable 
 
 - **Small dataset.** 617 demonstrations, but only 25 distinct human motions <!-- results/split.json -->.
 - **Retargeting bends the motion.** Each hand path is rotated, scaled and shifted to fit a layout, so the replayed path is not always an efficient one for the robot.
+- **Small layout changes.** LIBERO's 50 layouts move the cream cheese by at most about 4 cm and the bowl by about 3 cm <!-- results/layout_spread.json -->, so the unseen test layouts are close to the training ones. Larger changes in object positions are untested.
 - **Small evaluation.** 25 rollouts per model is too few to separate close results (e.g. 23/25 vs 25/25); more rollouts are needed.
 - **Simulated quantisation.** int8, int4 and binary show accuracy and memory, not speed.
 
