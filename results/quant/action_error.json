@@ -1,0 +1,53 @@
+{
+  "frames": 200,
+  "bf16": {
+    "mode": "bf16",
+    "bits_per_weight": 16,
+    "quantized_layers": 73,
+    "quantized_weights_million": 85.52,
+    "vision_weight_mb": 163.1,
+    "action_diff_cm_per_step_mean": 0.0,
+    "action_diff_cm_per_step_max": 0.0,
+    "gripper_agreement": 1.0
+  },
+  "fp16": {
+    "mode": "fp16",
+    "bits_per_weight": 16,
+    "quantized_layers": 73,
+    "quantized_weights_million": 85.52,
+    "vision_weight_mb": 163.1,
+    "action_diff_cm_per_step_mean": 0.002,
+    "action_diff_cm_per_step_max": 0.0412,
+    "gripper_agreement": 1.0
+  },
+  "int8": {
+    "mode": "int8",
+    "bits_per_weight": 8,
+    "quantized_layers": 73,
+    "quantized_weights_million": 85.52,
+    "vision_weight_mb": 81.7,
+    "action_diff_cm_per_step_mean": 0.0037,
+    "action_diff_cm_per_step_max": 0.3058,
+    "gripper_agreement": 1.0
+  },
+  "int4": {
+    "mode": "int4",
+    "bits_per_weight": 4,
+    "quantized_layers": 73,
+    "quantized_weights_million": 85.52,
+    "vision_weight_mb": 40.9,
+    "action_diff_cm_per_step_mean": 0.0673,
+    "action_diff_cm_per_step_max": 1.5192,
+    "gripper_agreement": 0.985
+  },
+  "binary": {
+    "mode": "binary",
+    "bits_per_weight": 1,
+    "quantized_layers": 73,
+    "quantized_weights_million": 85.52,
+    "vision_weight_mb": 10.4,
+    "action_diff_cm_per_step_mean": 0.2176,
+    "action_diff_cm_per_step_max": 2.6483,
+    "gripper_agreement": 0.99
+  }
+}
