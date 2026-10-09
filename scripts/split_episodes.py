@@ -2,7 +2,7 @@
 
 Splitting by clip (not by episode) matters: each clip was replayed on 25 start states, so its episodes are
 near-copies of each other. One clip per layout (a, b, c) is held out for validation, chosen at random with a
-fixed seed. The dataset does not store clip names, but replay_demos.py saved successful episodes in a fixed
+fixed seed. The layout is the first letter of the clip's file name (a1.mp4, b3.mp4, ...). The dataset does not store clip names, but replay_demos.py saved successful episodes in a fixed
 order (clips sorted by name, one block per clip), which the per-clip counts in the replay metrics recover.
 
 Usage:
@@ -41,6 +41,13 @@ def main() -> None:
     total = json.loads((args.dataset_root / "meta" / "info.json").read_text())["total_episodes"]
     if sum(len(e) for e in episodes.values()) != total:
         raise ValueError(f"Replay metrics count {sum(len(e) for e in episodes.values())} episodes, dataset has {total}")
+
+    misnamed = sorted(c for c in episodes if c[0] not in LAYOUTS)
+    if misnamed:
+        raise ValueError(f"Clip names must start with a layout letter {LAYOUTS}, e.g. a1.mp4; got {misnamed}")
+    for layout in LAYOUTS:
+        if not any(c[0] == layout and episodes[c] for c in episodes):
+            raise ValueError(f"No clip of layout '{layout}' has a successful replay to hold out")
 
     rng = np.random.default_rng(SEED)
     val_clips = [str(rng.choice(sorted(c for c in episodes if c[0] == layout and episodes[c])))
