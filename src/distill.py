@@ -47,7 +47,10 @@ def make_student(teacher: SmolVLAPolicy, n_layers: int) -> tuple[SmolVLAPolicy, 
     config.num_expert_layers = -1  # expert depth follows the VLM depth, as in the teacher
     config.train_expert_only = False  # the shortened VLM must adapt, so its text layers train too
     config.freeze_vision_encoder = True
-    config.load_vlm_weights = False  # every weight is copied from the teacher below
+    # Build the backbone the same way as the teacher, so it gets the same parameter dtypes (SmolVLA loads the
+    # VLM in bfloat16; building it from the config alone leaves the vision encoder in float32, ~4x slower).
+    # Every weight value is then overwritten from the teacher below.
+    config.load_vlm_weights = teacher.config.load_vlm_weights
     student = SmolVLAPolicy(config)
 
     layer_map = parity_preserving_layer_map(teacher.config.num_vlm_layers, n_layers,

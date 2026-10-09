@@ -1,0 +1,17 @@
+{
+  "gpu": "NVIDIA GeForce RTX 5070 Ti",
+  "batch_size": 1,
+  "repeats": 100,
+  "teacher": {
+    "params_million": 450.0,
+    "vlm_layers": 16,
+    "chunk_ms_median": 124.5,
+    "chunk_ms_p90": 125.4
+  },
+  "student": {
+    "params_million": 322.3,
+    "vlm_layers": 8,
+    "chunk_ms_median": 70.3,
+    "chunk_ms_p90": 70.9
+  }
+}
