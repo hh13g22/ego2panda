@@ -4,7 +4,6 @@ data/raw/
 *.pt
 *.safetensors
 __pycache__/
-.venv/
 .libero/
 models/
 data/lerobot/
