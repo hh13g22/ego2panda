@@ -1,0 +1,11 @@
+{
+  "start_states": 50,
+  "cream_cheese_1": {
+    "x_range_cm": 3.9,
+    "y_range_cm": 4.0
+  },
+  "akita_black_bowl_1": {
+    "x_range_cm": 2.8,
+    "y_range_cm": 2.9
+  }
+}
