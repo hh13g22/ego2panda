@@ -47,29 +47,48 @@ def predict_first_actions(policy, preprocessor, postprocessor, dataset) -> tuple
 
 
 def plot_paths(clips: dict[str, int], predicted, human, episode, out_path: Path) -> None:
-    """For one episode per clip: summed commanded path (x-y and height) and the gripper command over time."""
-    fig, axes = plt.subplots(len(clips), 3, figsize=(12, 3.2 * len(clips)), squeeze=False)
-    for row, (clip, ep) in zip(axes, clips.items()):
+    """Report figure: for one episode per held-out clip, the summed x-y and height commands and the gripper command,
+    human (solid) vs policy (dashed), with one shared legend, row labels and a caption."""
+    styles = {"human": dict(color=HUMAN_COLOR, linestyle="-", linewidth=1.8, label="Human (retargeted replay)"),
+              "policy": dict(color=POLICY_COLOR, linestyle="--", linewidth=1.6, label="Policy prediction")}
+    fig, axes = plt.subplots(len(clips), 3, figsize=(12, 3.0 * len(clips) + 1.2), squeeze=False,
+                             gridspec_kw={"width_ratios": [1, 1.25, 1.25], "wspace": 0.32, "hspace": 0.45})
+    for r, (row, (clip, ep)) in enumerate(zip(axes, clips.items())):
         mask = episode == ep
         t = np.arange(mask.sum()) / 20
-        paths = {name: np.cumsum(a[mask, :3] * STEP_CM, axis=0) for name, a in (("human", human), ("policy", predicted))}
-        for name, color in (("human", HUMAN_COLOR), ("policy", POLICY_COLOR)):
-            row[0].plot(paths[name][:, 0], paths[name][:, 1], color=color, label=name)
-            row[1].plot(t, paths[name][:, 2], color=color)
-            row[2].plot(t, (human if name == "human" else predicted)[mask, 6], color=color)
-        row[0].set_aspect("equal")
-        row[0].set_title(f"clip {clip}: summed x-y command (cm)", loc="left", fontsize=10)
-        row[1].set_title("summed height command (cm)", loc="left", fontsize=10)
-        row[2].set_title("gripper command (-1 open, +1 closed)", loc="left", fontsize=10)
-        row[1].set_xlabel("time (s)")
-        row[2].set_xlabel("time (s)")
+        actions = {"human": human[mask], "policy": predicted[mask]}
+        for name, a in actions.items():
+            path = np.cumsum(a[:, :3] * STEP_CM, axis=0)
+            row[0].plot(path[:, 0], path[:, 1], **styles[name])
+            row[1].plot(t, path[:, 2], **styles[name])
+            row[2].plot(t, a[:, 6], **styles[name])
+        start = np.cumsum(actions["human"][:1, :3] * STEP_CM, axis=0)[0]
+        row[0].plot(start[0], start[1], "o", color="0.2", markersize=5, label="Start")
+        row[0].set_aspect("equal", adjustable="datalim")
+        row[0].set_xlabel("x (cm)")
+        row[0].set_ylabel(f"Clip {clip}\n\ny (cm)", fontsize=10)
+        row[1].set_ylabel("z (cm)")
+        row[2].set_yticks([-1, 1], ["open", "closed"])
+        row[2].set_ylim(-1.4, 1.4)
+        for ax in row[1:]:
+            ax.set_xlabel("Time (s)")
         for ax in row:
             ax.spines[["top", "right"]].set_visible(False)
-    axes[0, 0].legend(frameon=False)
-    fig.suptitle("Held-out human motion vs policy prediction (running sum of per-step commands, not measured positions)",
-                 x=0.01, ha="left", fontsize=11)
-    fig.tight_layout(rect=(0, 0, 1, 0.97))
-    fig.savefig(out_path, dpi=120)
+            ax.grid(color="0.92", linewidth=0.8)
+            ax.tick_params(labelsize=9)
+        if r == 0:
+            for ax, title in zip(row, ("(a) Summed x-y command", "(b) Summed height command", "(c) Gripper command")):
+                ax.set_title(title, loc="left", fontsize=11)
+    handles, labels = axes[0, 0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper center", ncol=3, frameon=False, fontsize=10, bbox_to_anchor=(0.5, 0.955))
+    fig.suptitle("Policy predictions on held-out human clips", fontsize=13, fontweight="bold", y=0.995)
+    fig.text(0.5, 0.012,
+             "At every 20 Hz step the policy sees the recorded camera images and robot state and predicts the next command;\n"
+             "curves (a) and (b) add up those commands (action x 5 cm per step), so they compare the shape of the motion, "
+             "not measured positions. One episode per held-out clip.",
+             ha="center", va="bottom", fontsize=9, color="0.25")
+    fig.subplots_adjust(top=0.88, bottom=0.11, left=0.08, right=0.98)
+    fig.savefig(out_path, dpi=200)
 
 
 def main() -> None:
