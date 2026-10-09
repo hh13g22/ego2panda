@@ -1,4 +1,7 @@
-# Python 3.12 (lerobot 0.6.1 requires >=3.12). Install: uv venv --python 3.12 .venv && uv pip install -r requirements.txt
+# Python 3.12 (lerobot 0.6.1 requires >=3.12). Install into a conda env:
+#   conda create -n ego2panda python=3.12 -y && conda activate ego2panda
+#   CMAKE_POLICY_VERSION_MINIMUM=3.5 pip install -r requirements.txt
+# (the CMake setting lets egl_probe, a LIBERO dependency, build with CMake 4)
 # PyTorch is pinned to the CUDA 12.8 build used by the openpi envs on this machine (known to work on the RTX 5070 Ti, sm_120).
 --extra-index-url https://download.pytorch.org/whl/cu128
 torch==2.10.0+cu128

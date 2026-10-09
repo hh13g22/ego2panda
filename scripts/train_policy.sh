@@ -7,15 +7,15 @@
 # Usage:
 #     bash scripts/train_policy.sh OUTPUT_DIR [STEPS] [BATCH_SIZE]
 #     bash scripts/train_policy.sh outputs/train/smolvla_ego2panda 20000 32
-set -euo pipefail
+set -euo pipefail  # run inside the activated conda env: conda activate ego2panda
 
 OUTPUT_DIR=$1
 STEPS=${2:-20000}
 BATCH_SIZE=${3:-32}
-TRAIN_EPISODES=$(.venv/bin/python -c \
+TRAIN_EPISODES=$(python -c \
     "import json; print(str(json.load(open('results/split.json'))['train_episodes']).replace(' ', ''))")
 
-.venv/bin/lerobot-train \
+lerobot-train \
     --policy.path=lerobot/smolvla_base \
     --policy.device=cuda \
     --policy.push_to_hub=false \

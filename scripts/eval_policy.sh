@@ -12,7 +12,7 @@
 #         outputs/eval/smolvla_ego2panda 25 10 \
 #         '{"observation.images.image": "observation.images.camera1", "observation.images.image2": "observation.images.camera2"}'
 #     bash scripts/eval_policy.sh HuggingFaceVLA/smolvla_libero outputs/eval/smolvla_libero 25 10 '{}'
-set -euo pipefail
+set -euo pipefail  # run inside the activated conda env: conda activate ego2panda
 
 POLICY_PATH=$1
 OUTPUT_DIR=$2
@@ -20,7 +20,7 @@ N_EPISODES=$3
 N_ACTION_STEPS=$4
 RENAME_MAP=$5
 
-.venv/bin/lerobot-eval \
+lerobot-eval \
     --policy.path="$POLICY_PATH" \
     --policy.device=cuda \
     --policy.n_action_steps="$N_ACTION_STEPS" \
