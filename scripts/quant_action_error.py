@@ -1,7 +1,8 @@
-"""How much does quantising the vision encoder change the policy's actions? Offline, on held-out frames.
+"""How much does quantising the vision encoder change its features and the policy's actions? Offline.
 
-For each mode, the policy predicts an action chunk for the same held-out frames with the same noise; the first
-action is compared with the unquantised (bf16) prediction. Also reports the vision encoder's weight memory.
+For each mode, on the same held-out frames: the vision features of the front camera are compared with the
+unquantised (bf16) features by cosine similarity (1 = identical), and the policy predicts an action chunk with the
+same noise, whose first action is compared with the bf16 prediction. Also reports the encoder's weight memory.
 
 Usage:
     python scripts/quant_action_error.py --policy outputs/distill/smolvla_shallow8/step_010000 \
@@ -24,8 +25,9 @@ STEP_CM = 5.0  # an action of 1.0 commands 5 cm of end-effector motion per contr
 SEED = 0
 
 
-def first_actions(path: str, mode: str, frames: list) -> tuple[np.ndarray, dict]:
-    """Load the policy, quantise its vision encoder, and predict the first action for every frame."""
+def first_actions(path: str, mode: str, frames: list) -> tuple[np.ndarray, list, dict]:
+    """Load the policy, quantise its vision encoder, and return the first predicted action and the front-camera
+    vision features for every frame."""
     from lerobot.policies.factory import make_pre_post_processors
     from lerobot.policies.smolvla.modeling_smolvla import SmolVLAPolicy
 
@@ -34,14 +36,17 @@ def first_actions(path: str, mode: str, frames: list) -> tuple[np.ndarray, dict]
     policy = policy.to("cuda")
     pre, post = make_pre_post_processors(policy.config, pretrained_path=path,
                                          preprocessor_overrides={"device_processor": {"device": "cuda"}})
-    actions = []
+    actions, features = [], []
     with torch.no_grad():
         for i, frame in enumerate(frames):
+            batch = pre(frame)
+            images, _ = policy.prepare_images(batch)
+            features.append(policy.model.vlm_with_expert.embed_image(images[0]).float().cpu())
             torch.manual_seed(SEED + i)  # same noise for every mode, so only the vision encoder differs
-            actions.append(post(policy.predict_action_chunk(pre(frame))[:, 0]).cpu().numpy()[0])
+            actions.append(post(policy.predict_action_chunk(batch)[:, 0]).cpu().numpy()[0])
     del policy
     torch.cuda.empty_cache()
-    return np.array(actions), info
+    return np.array(actions), features, info
 
 
 def main() -> None:
@@ -60,12 +65,14 @@ def main() -> None:
     loader = torch.utils.data.DataLoader(torch.utils.data.Subset(dataset, indices.tolist()), batch_size=1)
     frames = list(loader)
 
-    reference, _ = first_actions(args.policy, "bf16", frames)
+    reference, ref_features, _ = first_actions(args.policy, "bf16", frames)
     results = {"frames": N_FRAMES}
     for mode in BITS:
-        actions, info = first_actions(args.policy, mode, frames)
+        actions, features, info = first_actions(args.policy, mode, frames)
+        cosine = [torch.nn.functional.cosine_similarity(f, r, dim=-1).mean().item() for f, r in zip(features, ref_features)]
         diff = np.abs(actions[:, :3] - reference[:, :3]) * STEP_CM
         results[mode] = {**info,
+                         "vision_feature_cosine_mean": round(float(np.mean(cosine)), 4),
                          "action_diff_cm_per_step_mean": round(float(diff.mean()), 4),
                          "action_diff_cm_per_step_max": round(float(diff.max()), 4),
                          "gripper_agreement": round(float((np.sign(actions[:, 6]) == np.sign(reference[:, 6])).mean()), 3)}

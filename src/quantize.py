@@ -60,6 +60,7 @@ def quantize_vision_encoder(policy: SmolVLAPolicy, mode: str) -> dict:
     encoder = vlm.vision_model
     layers = [m for m in encoder.modules() if isinstance(m, (nn.Linear, nn.Conv2d))]
     n_weights = sum(m.weight.numel() for m in layers)
+    original = [m.weight.detach().float().clone() for m in layers]
     if mode != "bf16":
         connector_dtype = next(vlm.connector.parameters()).dtype
         encoder.to(torch.float16 if mode == "fp16" else torch.float32)
@@ -71,10 +72,18 @@ def quantize_vision_encoder(policy: SmolVLAPolicy, mode: str) -> dict:
                     m.weight.copy_(fake_quantize(m.weight, BITS[mode]))
         vlm.vision_model = CastOutput(encoder, connector_dtype)
     scales = 0 if mode in ("bf16", "fp16") else sum(m.weight.shape[0] for m in layers)  # one fp16 scale per channel
+    # Checks that the quantisation really happened: relative weight error, and the largest number of distinct
+    # values in any of the first 32 output channels of each layer (int8 <= 255, int4 <= 15, binary <= 2).
+    err = sum(((m.weight.detach().float() - w) ** 2).sum().item() for m, w in zip(layers, original))
+    ref = sum((w ** 2).sum().item() for w in original)
+    levels = max(torch.unique(row).numel() for m in layers for row in m.weight.detach().reshape(m.weight.shape[0], -1)[:32])
     return {
         "mode": mode,
         "bits_per_weight": BITS[mode],
         "quantized_layers": len(layers),
         "quantized_weights_million": round(n_weights / 1e6, 2),
         "vision_weight_mb": round((n_weights * BITS[mode] + scales * 16) / 8 / 2**20, 1),
+        "weight_dtype": str(layers[0].weight.dtype).replace("torch.", ""),
+        "relative_weight_error": round((err / ref) ** 0.5, 5),
+        "max_distinct_values_per_channel": levels,
     }
