@@ -121,3 +121,17 @@ def distillation_loss(student: SmolVLAPolicy, teacher: SmolVLAPolicy, batch: dic
     loss_teach = ((v_student - v_teacher) ** 2 * valid).sum() / denom
     total = lambda_task * loss_task + lambda_teach * loss_teach
     return total, {"loss_task": loss_task.item(), "loss_teach": loss_teach.item()}
+
+
+def drop_unused_lm_head(policy: SmolVLAPolicy) -> int:
+    """Remove the VLM's text-generation head and return how many parameters that frees.
+
+    SmolVLA loads the full Hugging Face SmolVLM2 model, which includes a next-token head (47M parameters, not tied
+    to the token embeddings), but only uses the inner backbone and never calls the head. Removing it after loading
+    changes no output; it only saves memory. LeRobot rebuilds the head when loading a checkpoint, so this has to be
+    applied after from_pretrained.
+    """
+    vlm = policy.model.vlm_with_expert.vlm
+    freed = sum(p.numel() for p in vlm.lm_head.parameters())
+    vlm.lm_head = None
+    return freed

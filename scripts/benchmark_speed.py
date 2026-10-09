@@ -1,7 +1,9 @@
 """Measure inference time and size of SmolVLA policies (teacher vs distilled student).
 
 Times one action-chunk prediction (vision encoder, VLM and all flow-matching steps of the action expert) on a
-real training frame at batch size 1, after warm-up, with the GPU synchronised around each call.
+real training frame at batch size 1, after warm-up, with the GPU synchronised around each call. The unused
+text-generation head (lm_head) is removed from every policy after loading; it never runs, so this changes memory,
+not speed or outputs.
 
 Usage:
     python scripts/benchmark_speed.py --dataset-root data/lerobot/ego2panda --out results/distill/speed.json \
@@ -11,10 +13,14 @@ Usage:
 import argparse
 import json
 import statistics
+import sys
 import time
 from pathlib import Path
 
 import torch
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from src.distill import drop_unused_lm_head
 
 REPO_ID = "ego2panda/libero_goal_cream_cheese_bowl"
 WARMUP, REPEATS = 10, 100
@@ -22,11 +28,13 @@ SEED = 0
 
 
 def time_policy(path: str, raw_frame: dict) -> dict:
-    """Load one policy and return its parameter count and median / p90 chunk-prediction time in ms."""
+    """Load one policy and return its parameter count, weight memory and median / p90 chunk-prediction time."""
     from lerobot.policies.factory import make_pre_post_processors
     from lerobot.policies.smolvla.modeling_smolvla import SmolVLAPolicy
 
-    policy = SmolVLAPolicy.from_pretrained(path).to("cuda").eval()
+    policy = SmolVLAPolicy.from_pretrained(path).eval()
+    drop_unused_lm_head(policy)
+    policy = policy.to("cuda")
     preprocessor, _ = make_pre_post_processors(
         policy.config, pretrained_path=path, preprocessor_overrides={"device_processor": {"device": "cuda"}})
     batch = preprocessor(raw_frame)
@@ -45,6 +53,7 @@ def time_policy(path: str, raw_frame: dict) -> dict:
         "vlm_layers": policy.config.num_vlm_layers,
         "chunk_ms_median": round(statistics.median(times), 1),
         "chunk_ms_p90": round(statistics.quantiles(times, n=10)[-1], 1),
+        "weights_mb": round(sum(p.numel() * p.element_size() for p in policy.parameters()) / 2**20),
     }
     del policy
     torch.cuda.empty_cache()
